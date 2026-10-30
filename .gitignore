@@ -1,0 +1,22 @@
+# Compiles object files and libraries
+*.o
+*.obj
+*.a
+*.so
+
+# UEFI & Kernel binaries
+*.efi
+*.bin
+*.elf
+
+# Disk images and virtual drives
+*.img
+*.iso
+*.vmdk
+
+# QEMU and compiler log files
+*.log
+
+# Build output directories
+build/
+esp/

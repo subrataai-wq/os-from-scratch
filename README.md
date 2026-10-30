@@ -1,3 +1,5 @@
+![os-gui](images/gui-output1.png)
+
 # os-from-scratch 💿
 
 Welcome! This is an open learning resource and playground for building a 64-bit operating system from scratch in freestanding C, booting natively via modern **UEFI (Unified Extensible Firmware Interface)** on x86_64 architecture.

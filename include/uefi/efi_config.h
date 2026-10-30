@@ -1,0 +1,230 @@
+/*
+ * efi_config.h - UEFI configuration tables, runtime properties, and standard GUIDs.
+ *
+ * Conforms to UEFI Specification 2.11 (Section 4.6 & Section 23.4).
+ */
+
+#ifndef _EFI_CONFIG_H_
+#define _EFI_CONFIG_H_
+
+#include "efi_types.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/*
+ * Configuration table entry (UEFI 2.11 Section 4.6.1).
+ */
+typedef struct
+{
+  EFI_GUID VendorGuid;
+  VOID *VendorTable;
+} EFI_CONFIGURATION_TABLE;
+
+/*
+ * Standard configuration table GUIDs (UEFI 2.11 Section 4.6.1.1 - 4.6.1.3).
+ */
+
+/* ACPI 2.0+ Root System Description Pointer (RSDP) */
+#define EFI_ACPI_20_TABLE_GUID \
+  {0x8868e871, 0xe4f1, 0x11d3, {0xbc, 0x22, 0x00, 0x80, 0xc7, 0x3c, 0x88, 0x81}}
+
+#define EFI_ACPI_TABLE_GUID EFI_ACPI_20_TABLE_GUID
+
+/* ACPI 1.0b Root System Description Pointer (RSDP) */
+#define EFI_ACPI_10_TABLE_GUID \
+  {0xeb9d2d30, 0x2d88, 0x11d3, {0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d}}
+
+#define ACPI_10_TABLE_GUID EFI_ACPI_10_TABLE_GUID
+
+/* SAL System Table */
+#define EFI_SAL_SYSTEM_TABLE_GUID \
+  {0xeb9d2d32, 0x2d88, 0x11d3, {0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d}}
+
+/* SMBIOS 2.x (32-bit) Entry Point */
+#define EFI_SMBIOS_TABLE_GUID \
+  {0xeb9d2d31, 0x2d88, 0x11d3, {0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d}}
+
+/* SMBIOS 3.x (64-bit) Entry Point */
+#define EFI_SMBIOS3_TABLE_GUID \
+  {0xf2fd1544, 0x9794, 0x4a2c, {0x99, 0x2e, 0xe5, 0xbb, 0xcf, 0x20, 0xe3, 0x94}}
+
+#define ACPI_TABLE_GUID EFI_ACPI_10_TABLE_GUID
+#define SAL_SYSTEM_TABLE_GUID EFI_SAL_SYSTEM_TABLE_GUID
+#define SMBIOS_TABLE_GUID EFI_SMBIOS_TABLE_GUID
+#define SMBIOS3_TABLE_GUID EFI_SMBIOS3_TABLE_GUID
+
+/* Multiprocessor Specification (MPS) Table */
+#define EFI_MPS_TABLE_GUID \
+  {0xeb9d2d2f, 0x2d88, 0x11d3, {0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d}}
+
+#define MPS_TABLE_GUID EFI_MPS_TABLE_GUID
+
+/* Flattened Devicetree (FDT / DTB) */
+#define EFI_DTB_TABLE_GUID \
+  {0xb1b621d5, 0xf19c, 0x41a5, {0x83, 0x0b, 0xd9, 0x15, 0x2c, 0x69, 0xaa, 0xe0}}
+
+/*
+ * JSON configuration tables (UEFI 2.11 Section 4.6.1.2).
+ */
+#define EFI_JSON_CONFIG_DATA_TABLE_GUID \
+  {0x87367f87, 0x1119, 0x41ce, {0xaa, 0xec, 0x8b, 0xe0, 0x11, 0x1f, 0x55, 0x8a}}
+
+#define EFI_JSON_CAPSULE_DATA_TABLE_GUID \
+  {0x35e7a725, 0x8dd2, 0x4cac, {0x80, 0x11, 0x33, 0xcd, 0xa8, 0x10, 0x90, 0x56}}
+
+#define EFI_JSON_CAPSULE_RESULT_TABLE_GUID \
+  {0xdbc461c3, 0xb3de, 0x422a, {0xb9, 0xb4, 0x98, 0x86, 0xfd, 0x49, 0xa1, 0xe5}}
+
+/*
+ * Runtime properties table (UEFI 2.11 Section 4.6.2).
+ */
+#define EFI_RT_PROPERTIES_TABLE_GUID \
+  {0xeb66918a, 0x7eef, 0x402a, {0x84, 0x2e, 0x93, 0x1d, 0x21, 0xc3, 0x8a, 0xe9}}
+
+#define EFI_RT_PROPERTIES_TABLE_VERSION 0x1
+
+#define EFI_RT_SUPPORTED_GET_TIME 0x00000001U
+#define EFI_RT_SUPPORTED_SET_TIME 0x00000002U
+#define EFI_RT_SUPPORTED_GET_WAKEUP_TIME 0x00000004U
+#define EFI_RT_SUPPORTED_SET_WAKEUP_TIME 0x00000008U
+#define EFI_RT_SUPPORTED_GET_VARIABLE 0x00000010U
+#define EFI_RT_SUPPORTED_GET_NEXT_VARIABLE_NAME 0x00000020U
+#define EFI_RT_SUPPORTED_SET_VARIABLE 0x00000040U
+#define EFI_RT_SUPPORTED_SET_VIRTUAL_ADDRESS_MAP 0x00000080U
+#define EFI_RT_SUPPORTED_CONVERT_POINTER 0x00000100U
+#define EFI_RT_SUPPORTED_GET_NEXT_HIGH_MONOTONIC_COUNT 0x00000200U
+#define EFI_RT_SUPPORTED_GET_NEXT_HIGH_MONO_COUNT EFI_RT_SUPPORTED_GET_NEXT_HIGH_MONOTONIC_COUNT
+#define EFI_RT_SUPPORTED_RESET_SYSTEM 0x00000400U
+#define EFI_RT_SUPPORTED_UPDATE_CAPSULE 0x00000800U
+#define EFI_RT_SUPPORTED_QUERY_CAPSULE_CAPABILITIES 0x00001000U
+#define EFI_RT_SUPPORTED_QUERY_VARIABLE_INFO 0x00002000U
+
+typedef struct
+{
+  UINT16 Version;
+  UINT16 Length;
+  UINT32 RuntimeServicesSupported;
+} EFI_RT_PROPERTIES_TABLE;
+
+/*
+ * Memory attributes table (UEFI 2.11 Section 4.6.3).
+ */
+#define EFI_MEMORY_ATTRIBUTES_TABLE_GUID \
+  {0xdcfa911d, 0x26eb, 0x469f, {0xa2, 0x20, 0x38, 0xb7, 0xdc, 0x46, 0x12, 0x20}}
+
+#define EFI_MEMORY_ATTRIBUTES_TABLE_VERSION 0x00000002U
+
+#define EFI_MEMORY_ATTRIBUTES_FLAGS_RT_FORWARD_CONTROL_FLOW_GUARD 0x00000001U
+
+typedef struct
+{
+  UINT32 Version;
+  UINT32 NumberOfEntries;
+  UINT32 DescriptorSize;
+  UINT32 Flags;
+} EFI_MEMORY_ATTRIBUTES_TABLE;
+
+/*
+ * Conformance profiles table (UEFI 2.11 Section 4.6.4).
+ */
+#define EFI_CONFORMANCE_PROFILES_TABLE_GUID \
+  {0x36122546, 0xf7e7, 0x4c8f, {0xbd, 0x9b, 0xeb, 0x85, 0x25, 0xb5, 0x0c, 0x0b}}
+
+#define EFI_CONFORMANCE_PROFILES_TABLE_VERSION 0x1
+
+#define EFI_CONFORMANCE_PROFILES_UEFI_SPEC_GUID \
+  {0x523c91af, 0xa195, 0x4382, {0x81, 0x8d, 0x29, 0x5f, 0xe4, 0x00, 0x64, 0x65}}
+
+#define EFI_CONFORMANCE_PROFILE_EBBR_2_1_GUID \
+  {0xcce33c35, 0x74ac, 0x4087, {0xbc, 0xe7, 0x8b, 0x29, 0xb0, 0x2e, 0xeb, 0x27}}
+
+#define EFI_CONFORMANCE_PROFILE_EBBR_2_2_GUID \
+  {0x9073e612, 0x7a07, 0x4a16, {0xb2, 0x89, 0x53, 0x17, 0x0b, 0x30, 0x29, 0x9b}}
+
+typedef struct
+{
+  UINT16 Version;
+  UINT16 NumberOfProfiles;
+} EFI_CONFORMANCE_PROFILES_TABLE;
+
+/*
+ * System resource table - ESRT (UEFI 2.11 Section 23.4).
+ */
+#define EFI_SYSTEM_RESOURCE_TABLE_GUID \
+  {0xb122a263, 0x3661, 0x4f68, {0x99, 0x29, 0x78, 0xf8, 0xb0, 0xd6, 0x21, 0x80}}
+
+#define EFI_SYSTEM_RESOURCE_TABLE_FIRMWARE_RESOURCE_VERSION 1
+
+#define ESRT_FW_TYPE_UNKNOWN 0x00000000U
+#define ESRT_FW_TYPE_SYSTEMFIRMWARE 0x00000001U
+#define ESRT_FW_TYPE_DEVICEFIRMWARE 0x00000002U
+#define ESRT_FW_TYPE_UEFIDRIVER 0x00000003U
+
+#define LAST_ATTEMPT_STATUS_SUCCESS 0x00000000U
+#define LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL 0x00000001U
+#define LAST_ATTEMPT_STATUS_ERROR_INSUFFICIENT_RESOURCES 0x00000002U
+#define LAST_ATTEMPT_STATUS_ERROR_INCORRECT_VERSION 0x00000003U
+#define LAST_ATTEMPT_STATUS_ERROR_INVALID_FORMAT 0x00000004U
+#define LAST_ATTEMPT_STATUS_ERROR_AUTH_ERROR 0x00000005U
+#define LAST_ATTEMPT_STATUS_ERROR_PWR_EVT_AC 0x00000006U
+#define LAST_ATTEMPT_STATUS_ERROR_PWR_EVT_BATT 0x00000007U
+#define LAST_ATTEMPT_STATUS_ERROR_UNSATISFIED_DEPENDENCIES 0x00000008U
+#define LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL_VENDOR_RANGE_MIN 0x00001000U
+#define LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL_VENDOR_RANGE_MAX 0x00004000U
+
+typedef struct
+{
+  EFI_GUID FwClass;
+  UINT32 FwType;
+  UINT32 FwVersion;
+  UINT32 LowestSupportedFwVersion;
+  UINT32 CapsuleFlags;
+  UINT32 LastAttemptVersion;
+  UINT32 LastAttemptStatus;
+} EFI_SYSTEM_RESOURCE_ENTRY;
+
+typedef struct
+{
+  UINT32 FwResourceCount;
+  UINT32 FwResourceCountMax;
+  UINT64 FwResourceVersion;
+} EFI_SYSTEM_RESOURCE_TABLE;
+
+/*
+ * Debug image info table (UEFI 2.11 Section 18.4).
+ */
+#define EFI_DEBUG_IMAGE_INFO_TABLE_GUID \
+  {0x49152e77, 0x1ada, 0x4764, {0xb7, 0xa2, 0x7a, 0xfe, 0xfe, 0xd9, 0x5e, 0x8b}}
+
+#define EFI_DEBUG_IMAGE_INFO_UPDATE_IN_PROGRESS 0x01U
+#define EFI_DEBUG_IMAGE_INFO_TABLE_MODIFIED 0x02U
+#define EFI_DEBUG_IMAGE_INFO_TYPE_NORMAL 0x01U
+
+typedef struct
+{
+  UINT32 ImageInfoType;
+  EFI_LOADED_IMAGE_PROTOCOL *LoadedImageProtocolInstance;
+  EFI_HANDLE ImageHandle;
+} EFI_DEBUG_IMAGE_INFO_NORMAL;
+
+typedef union
+{
+  UINT32 *ImageInfoType;
+  EFI_DEBUG_IMAGE_INFO_NORMAL *NormalImage;
+} EFI_DEBUG_IMAGE_INFO;
+
+typedef struct
+{
+  volatile UINT32 UpdateStatus;
+  UINT32 TableSize;
+  EFI_DEBUG_IMAGE_INFO *EfiDebugImageInfoTable;
+} EFI_DEBUG_IMAGE_INFO_TABLE_HEADER;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _EFI_CONFIG_H_ */

@@ -2,7 +2,7 @@
 
 A minimal 64-bit operating system for x86_64, booting natively via UEFI without legacy BIOS or GRUB dependencies. Implemented in freestanding C using Clang, LLD, and Ninja.
 
-![Kernel Boot Screen](images/gui-output1.png)
+![Kernel Boot Screen](images/gui-output2.png)
 
 ## Overview
 

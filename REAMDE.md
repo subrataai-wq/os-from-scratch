@@ -38,4 +38,4 @@ cmake --build --preset uefi --target run
 
 To look deeper into current milestones, review individual checklists, or learn about toolchain configurations, follow our live progress tracker:
 
-👉 See detailed architectural insights in **[PROGRESS.md](PROGRESS.md)**
+👉 See detailed architectural insights in **[PROGRESS.md](./docs/PROGRESS.md)**

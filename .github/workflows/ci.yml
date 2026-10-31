@@ -1,0 +1,105 @@
+name: OS Build & Emulation CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test-linux:
+    name: Linux Cross-Build & QEMU Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Toolchain & Emulator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld ninja-build qemu-system-x86 ovmf
+
+      - name: Verify C17 Standard & Dual-ABI Invariants
+        run: |
+          # Canonical project standard: C17 (strict pedantic, zero warnings)
+          clang -std=c17 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/uefi/uefi.h
+          clang -std=c17 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/elf64.h
+          clang --target=x86_64-unknown-windows -std=c17 -pedantic-errors -Wall -Wextra -Werror -fsyntax-only boot_info.h
+          clang --target=x86_64-unknown-none-elf -std=c17 -pedantic-errors -Wall -Wextra -Werror -fsyntax-only boot_info.h
+          # Optional backward header compatibility checks (C11, C99)
+          clang -std=c11 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/uefi/uefi.h
+          clang -std=c99 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/elf64.h
+
+      - name: Configure CMake (Debug + AutoBoot)
+        run: |
+          cmake -B build/debug -G Ninja \
+            -D CMAKE_C_COMPILER=clang \
+            -D CMAKE_BUILD_TYPE=Debug \
+            -D OS_AUTOBOOT=ON
+
+      - name: Build All Targets (-Werror Enforced)
+        run: cmake --build build/debug --clean-first
+
+      - name: Verify Generated Binaries
+        run: |
+          test -f build/debug/esp/EFI/BOOT/BOOTX64.EFI
+          test -f build/debug/esp/kernel.elf
+          llvm-readelf -h -l build/debug/kernel.elf
+
+      - name: Run Headless QEMU Smoke Test
+        run: |
+          OVMF_PATH=$(find /usr/share/OVMF /usr/share/ovmf /usr/share/edk2 -name "OVMF_CODE.fd" -o -name "OVMF.fd" 2>/dev/null | head -n 1)
+          if [ -z "$OVMF_PATH" ]; then
+            echo "Error: OVMF firmware not found!" >&2
+            exit 1
+          fi
+          echo "Using OVMF firmware: $OVMF_PATH"
+          timeout 15s qemu-system-x86_64 \
+            -drive if=pflash,format=raw,readonly=on,file="$OVMF_PATH" \
+            -drive file=fat:rw:build/debug/esp,format=raw \
+            -m 512M \
+            -net none \
+            -display none \
+            -serial stdio || [ $? -eq 124 ]
+
+      - name: Configure & Build Release Configuration
+        run: |
+          cmake -B build/release -G Ninja \
+            -D CMAKE_C_COMPILER=clang \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D OS_AUTOBOOT=ON
+          cmake --build build/release --clean-first
+
+      - name: Upload ESP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp-partition-linux
+          path: build/debug/esp/
+
+  build-windows:
+    name: Windows Native Preset Build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: choco install ninja
+
+      - name: Configure and Build (Ninja Preset)
+        run: |
+          cmake --preset ninja-debug -D OS_AUTOBOOT=ON
+          cmake --build --preset ninja-debug
+
+      - name: Verify Windows Artifacts
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "build/debug/esp/EFI/BOOT/BOOTX64.EFI")) { throw "BOOTX64.EFI missing!" }
+          if (-not (Test-Path "build/debug/esp/kernel.elf")) { throw "kernel.elf missing!" }
+
+      - name: Upload ESP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp-partition-windows
+          path: build/debug/esp/
+

@@ -267,9 +267,6 @@ extern "C"
         IN UINTN ExitDataSize,
         IN CHAR16 *ExitData OPTIONAL);
 
-    typedef EFI_STATUS(EFIAPI *EFI_IMAGE_UNLOAD)(
-        IN EFI_HANDLE ImageHandle);
-
     typedef EFI_STATUS(EFIAPI *EFI_EXIT_BOOT_SERVICES)(
         IN EFI_HANDLE ImageHandle,
         IN UINTN MapKey);
@@ -445,6 +442,11 @@ extern "C"
         UINTN NumberOfTableEntries;
         EFI_CONFIGURATION_TABLE *ConfigurationTable;
     } EFI_SYSTEM_TABLE;
+
+#if defined(__SIZEOF_POINTER__) && (__SIZEOF_POINTER__ == 8)
+    _EFI_SA(sizeof(EFI_SYSTEM_TABLE) == 120, "EFI_SYSTEM_TABLE size mismatch (64-bit)");
+    _EFI_SA(__builtin_offsetof(EFI_SYSTEM_TABLE, BootServices) == 96, "EFI_SYSTEM_TABLE.BootServices offset mismatch (64-bit)");
+#endif
 
     typedef EFI_STATUS(EFIAPI *EFI_IMAGE_ENTRY_POINT)(
         IN EFI_HANDLE ImageHandle,

@@ -35,6 +35,9 @@ struct _EFI_DEVICE_PATH_PROTOCOL
 #define EFI_DP_NODE_LENGTH(Dp) \
   ((UINT16)(((Dp)->Length[0]) | (((Dp)->Length[1]) << 8)))
 
+#define EFI_DP_IS_VALID_NODE(Dp) \
+  (EFI_DP_NODE_LENGTH(Dp) >= sizeof(EFI_DEVICE_PATH_PROTOCOL))
+
 #define EFI_DP_SET_NODE_LENGTH(Dp, Len)             \
   do                                                \
   {                                                 \

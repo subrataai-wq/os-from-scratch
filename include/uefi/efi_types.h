@@ -55,10 +55,10 @@ extern "C"
 #define VOID void
 #endif
 
-/*
- * Fundamental data types (UEFI 2.11 Section 2.3.1, Table 2-1).
- */
-typedef uint8_t BOOLEAN;
+  /*
+   * Fundamental data types (UEFI 2.11 Section 2.3.1, Table 2-1).
+   */
+  typedef uint8_t BOOLEAN;
 
 #ifndef TRUE
 #define TRUE ((BOOLEAN)1)
@@ -74,22 +74,22 @@ typedef uint8_t BOOLEAN;
 #endif
 #endif
 
-typedef int8_t INT8;
-typedef int16_t INT16;
-typedef int32_t INT32;
-typedef int64_t INT64;
+  typedef int8_t INT8;
+  typedef int16_t INT16;
+  typedef int32_t INT32;
+  typedef int64_t INT64;
 
-typedef uint8_t UINT8;
-typedef uint16_t UINT16;
-typedef uint32_t UINT32;
-typedef uint64_t UINT64;
+  typedef uint8_t UINT8;
+  typedef uint16_t UINT16;
+  typedef uint32_t UINT32;
+  typedef uint64_t UINT64;
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(_M_X64) || \
     defined(__aarch64__) || defined(_M_ARM64) ||                    \
     (defined(__riscv) && (__riscv_xlen == 64)) ||                   \
     (defined(__loongarch__) && (__loongarch_grlen == 64))
-typedef int64_t INTN;
-typedef uint64_t UINTN;
+  typedef int64_t INTN;
+  typedef uint64_t UINTN;
 #define EFI_MAX_BIT (0x8000000000000000ULL)
 #else
 typedef int32_t INTN;
@@ -98,8 +98,8 @@ typedef uint32_t UINTN;
 #endif
 
 #if defined(__SIZEOF_INT128__)
-typedef __int128 INT128;
-typedef unsigned __int128 UINT128;
+  __extension__ typedef __int128 INT128;
+  __extension__ typedef unsigned __int128 UINT128;
 #else
 typedef struct
 {
@@ -114,57 +114,57 @@ typedef struct
 } UINT128;
 #endif
 
-typedef char CHAR8;
-typedef uint16_t CHAR16;
+  typedef char CHAR8;
+  typedef uint16_t CHAR16;
 
-typedef UINTN EFI_STATUS;
-typedef VOID *EFI_HANDLE;
-typedef VOID *EFI_EVENT;
-typedef UINT64 EFI_LBA;
-typedef UINTN EFI_TPL;
-typedef UINT64 EFI_PHYSICAL_ADDRESS;
-typedef UINT64 EFI_VIRTUAL_ADDRESS;
+  typedef UINTN EFI_STATUS;
+  typedef VOID *EFI_HANDLE;
+  typedef VOID *EFI_EVENT;
+  typedef UINT64 EFI_LBA;
+  typedef UINTN EFI_TPL;
+  typedef UINT64 EFI_PHYSICAL_ADDRESS;
+  typedef UINT64 EFI_VIRTUAL_ADDRESS;
 
-typedef EFI_STATUS(EFIAPI *EFI_IMAGE_UNLOAD)(IN EFI_HANDLE ImageHandle);
+  typedef EFI_STATUS(EFIAPI *EFI_IMAGE_UNLOAD)(IN EFI_HANDLE ImageHandle);
 
-typedef struct _EFI_LOADED_IMAGE_PROTOCOL EFI_LOADED_IMAGE_PROTOCOL;
-typedef struct _EFI_DEVICE_PATH_PROTOCOL EFI_DEVICE_PATH_PROTOCOL;
-typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
-typedef struct _EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL;
-typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
+  typedef struct _EFI_LOADED_IMAGE_PROTOCOL EFI_LOADED_IMAGE_PROTOCOL;
+  typedef struct _EFI_DEVICE_PATH_PROTOCOL EFI_DEVICE_PATH_PROTOCOL;
+  typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
+  typedef struct _EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL;
+  typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
 
-/*
- * GUID and network address types (UEFI 2.11 Table 2-1).
- */
-typedef struct
-{
-  UINT32 Data1;
-  UINT16 Data2;
-  UINT16 Data3;
-  UINT8 Data4[8];
-} EFI_GUID;
+  /*
+   * GUID and network address types (UEFI 2.11 Table 2-1).
+   */
+  typedef struct
+  {
+    UINT32 Data1;
+    UINT16 Data2;
+    UINT16 Data3;
+    UINT8 Data4[8];
+  } EFI_GUID;
 
-typedef struct
-{
-  UINT8 Addr[32];
-} EFI_MAC_ADDRESS;
+  typedef struct
+  {
+    UINT8 Addr[32];
+  } EFI_MAC_ADDRESS;
 
-typedef struct
-{
-  UINT8 Addr[4];
-} EFI_IPv4_ADDRESS;
+  typedef struct
+  {
+    UINT8 Addr[4];
+  } EFI_IPv4_ADDRESS;
 
-typedef struct
-{
-  UINT8 Addr[16];
-} EFI_IPv6_ADDRESS;
+  typedef struct
+  {
+    UINT8 Addr[16];
+  } EFI_IPv6_ADDRESS;
 
-typedef union
-{
-  UINT32 Addr[4];
-  EFI_IPv4_ADDRESS v4;
-  EFI_IPv6_ADDRESS v6;
-} EFI_IP_ADDRESS;
+  typedef union
+  {
+    UINT32 Addr[4];
+    EFI_IPv4_ADDRESS v4;
+    EFI_IPv6_ADDRESS v6;
+  } EFI_IP_ADDRESS;
 
 /*
  * UEFI status codes (UEFI 2.11 Appendix D).
@@ -217,17 +217,17 @@ typedef union
 #define EFI_WARN_FILE_SYSTEM EFI_ENCODE_WARNING(6)
 #define EFI_WARN_RESET_REQUIRED EFI_ENCODE_WARNING(7)
 
-/*
- * Standard table header (UEFI 2.11 Section 4.2).
- */
-typedef struct
-{
-  UINT64 Signature;
-  UINT32 Revision;
-  UINT32 HeaderSize;
-  UINT32 CRC32;
-  UINT32 Reserved;
-} EFI_TABLE_HEADER;
+  /*
+   * Standard table header (UEFI 2.11 Section 4.2).
+   */
+  typedef struct
+  {
+    UINT64 Signature;
+    UINT32 Revision;
+    UINT32 HeaderSize;
+    UINT32 CRC32;
+    UINT32 Reserved;
+  } EFI_TABLE_HEADER;
 
 /*
  * Events, timers, and task priority levels (UEFI 2.11 Section 7.1).
@@ -265,12 +265,12 @@ typedef struct
 #define TPL_NOTIFY 16
 #define TPL_HIGH_LEVEL 31
 
-typedef enum
-{
-  TimerCancel,
-  TimerPeriodic,
-  TimerRelative
-} EFI_TIMER_DELAY;
+  typedef enum
+  {
+    TimerCancel,
+    TimerPeriodic,
+    TimerRelative
+  } EFI_TIMER_DELAY;
 
 /*
  * Memory allocation and descriptor definitions (UEFI 2.11 Section 7.2).
@@ -282,34 +282,34 @@ typedef enum
 #define EFI_SIZE_TO_PAGES(Size) \
   (((UINTN)(Size) >> EFI_PAGE_SHIFT) + ((((UINTN)(Size) & EFI_PAGE_MASK) != 0) ? 1 : 0))
 
-typedef enum
-{
-  AllocateAnyPages,
-  AllocateMaxAddress,
-  AllocateAddress,
-  MaxAllocateType
-} EFI_ALLOCATE_TYPE;
+  typedef enum
+  {
+    AllocateAnyPages,
+    AllocateMaxAddress,
+    AllocateAddress,
+    MaxAllocateType
+  } EFI_ALLOCATE_TYPE;
 
-typedef enum
-{
-  EfiReservedMemoryType,
-  EfiLoaderCode,
-  EfiLoaderData,
-  EfiBootServicesCode,
-  EfiBootServicesData,
-  EfiRuntimeServicesCode,
-  EfiRuntimeServicesData,
-  EfiConventionalMemory,
-  EfiUnusableMemory,
-  EfiACPIReclaimMemory,
-  EfiACPIMemoryNVS,
-  EfiMemoryMappedIO,
-  EfiMemoryMappedIOPortSpace,
-  EfiPalCode,
-  EfiPersistentMemory,
-  EfiUnacceptedMemoryType,
-  EfiMaxMemoryType
-} EFI_MEMORY_TYPE;
+  typedef enum
+  {
+    EfiReservedMemoryType,
+    EfiLoaderCode,
+    EfiLoaderData,
+    EfiBootServicesCode,
+    EfiBootServicesData,
+    EfiRuntimeServicesCode,
+    EfiRuntimeServicesData,
+    EfiConventionalMemory,
+    EfiUnusableMemory,
+    EfiACPIReclaimMemory,
+    EfiACPIMemoryNVS,
+    EfiMemoryMappedIO,
+    EfiMemoryMappedIOPortSpace,
+    EfiPalCode,
+    EfiPersistentMemory,
+    EfiUnacceptedMemoryType,
+    EfiMaxMemoryType
+  } EFI_MEMORY_TYPE;
 
 #define EFI_MEMORY_UC 0x0000000000000001ULL
 #define EFI_MEMORY_WC 0x0000000000000002ULL
@@ -331,37 +331,37 @@ typedef enum
 
 #define EFI_MEMORY_DESCRIPTOR_VERSION 1
 
-typedef struct
-{
-  UINT32 Type;
-  EFI_PHYSICAL_ADDRESS PhysicalStart;
-  EFI_VIRTUAL_ADDRESS VirtualStart;
-  UINT64 NumberOfPages;
-  UINT64 Attribute;
-} EFI_MEMORY_DESCRIPTOR;
+  typedef struct
+  {
+    UINT32 Type;
+    EFI_PHYSICAL_ADDRESS PhysicalStart;
+    EFI_VIRTUAL_ADDRESS VirtualStart;
+    UINT64 NumberOfPages;
+    UINT64 Attribute;
+  } EFI_MEMORY_DESCRIPTOR;
 
-/*
- * Protocol handlers and search types (UEFI 2.11 Section 7.3).
- */
-typedef enum
-{
-  EFI_NATIVE_INTERFACE
-} EFI_INTERFACE_TYPE;
+  /*
+   * Protocol handlers and search types (UEFI 2.11 Section 7.3).
+   */
+  typedef enum
+  {
+    EFI_NATIVE_INTERFACE
+  } EFI_INTERFACE_TYPE;
 
-typedef enum
-{
-  AllHandles,
-  ByRegisterNotify,
-  ByProtocol
-} EFI_LOCATE_SEARCH_TYPE;
+  typedef enum
+  {
+    AllHandles,
+    ByRegisterNotify,
+    ByProtocol
+  } EFI_LOCATE_SEARCH_TYPE;
 
-typedef struct
-{
-  EFI_HANDLE AgentHandle;
-  EFI_HANDLE ControllerHandle;
-  UINT32 Attributes;
-  UINT32 OpenCount;
-} EFI_OPEN_PROTOCOL_INFORMATION_ENTRY;
+  typedef struct
+  {
+    EFI_HANDLE AgentHandle;
+    EFI_HANDLE ControllerHandle;
+    UINT32 Attributes;
+    UINT32 OpenCount;
+  } EFI_OPEN_PROTOCOL_INFORMATION_ENTRY;
 
 #define EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL 0x00000001U
 #define EFI_OPEN_PROTOCOL_GET_PROTOCOL 0x00000002U
@@ -386,55 +386,55 @@ typedef struct
 #define EFI_TIME_ADJUST_DAYLIGHT 0x01
 #define EFI_TIME_IN_DAYLIGHT 0x02
 
-typedef struct
-{
-  UINT16 Year;
-  UINT8 Month;
-  UINT8 Day;
-  UINT8 Hour;
-  UINT8 Minute;
-  UINT8 Second;
-  UINT8 Pad1;
-  UINT32 Nanosecond;
-  INT16 TimeZone;
-  UINT8 Daylight;
-  UINT8 Pad2;
-} EFI_TIME;
+  typedef struct
+  {
+    UINT16 Year;
+    UINT8 Month;
+    UINT8 Day;
+    UINT8 Hour;
+    UINT8 Minute;
+    UINT8 Second;
+    UINT8 Pad1;
+    UINT32 Nanosecond;
+    INT16 TimeZone;
+    UINT8 Daylight;
+    UINT8 Pad2;
+  } EFI_TIME;
 
-typedef struct
-{
-  UINT32 Resolution;
-  UINT32 Accuracy;
-  BOOLEAN SetsToZero;
-} EFI_TIME_CAPABILITIES;
+  typedef struct
+  {
+    UINT32 Resolution;
+    UINT32 Accuracy;
+    BOOLEAN SetsToZero;
+  } EFI_TIME_CAPABILITIES;
 
 #define EFI_OPTIONAL_PTR 0x00000001U
 
-typedef enum
-{
-  EfiResetCold,
-  EfiResetWarm,
-  EfiResetShutdown,
-  EfiResetPlatformSpecific
-} EFI_RESET_TYPE;
-
-typedef struct
-{
-  UINT64 Length;
-  union
+  typedef enum
   {
-    EFI_PHYSICAL_ADDRESS DataBlock;
-    EFI_PHYSICAL_ADDRESS ContinuationPointer;
-  } Union;
-} EFI_CAPSULE_BLOCK_DESCRIPTOR;
+    EfiResetCold,
+    EfiResetWarm,
+    EfiResetShutdown,
+    EfiResetPlatformSpecific
+  } EFI_RESET_TYPE;
 
-typedef struct
-{
-  EFI_GUID CapsuleGuid;
-  UINT32 HeaderSize;
-  UINT32 Flags;
-  UINT32 CapsuleImageSize;
-} EFI_CAPSULE_HEADER;
+  typedef struct
+  {
+    UINT64 Length;
+    union
+    {
+      EFI_PHYSICAL_ADDRESS DataBlock;
+      EFI_PHYSICAL_ADDRESS ContinuationPointer;
+    } Union;
+  } EFI_CAPSULE_BLOCK_DESCRIPTOR;
+
+  typedef struct
+  {
+    EFI_GUID CapsuleGuid;
+    UINT32 HeaderSize;
+    UINT32 Flags;
+    UINT32 CapsuleImageSize;
+  } EFI_CAPSULE_HEADER;
 
 #define CAPSULE_FLAGS_PERSIST_ACROSS_RESET 0x00010000U
 #define CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE 0x00020000U
@@ -448,15 +448,15 @@ typedef struct
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 #define _EFI_SA(c, m) _Static_assert(c, m)
 #else
-#define _EFI_SA(c, m)
+#define _EFI_SA(c, m) extern char _efi_static_assert_dummy[(c) ? 1 : -1]
 #endif
-_EFI_SA(sizeof(BOOLEAN) == 1, "BOOLEAN must be 1 byte");
-_EFI_SA(sizeof(CHAR16) == 2, "CHAR16 must be 2 bytes");
-_EFI_SA(sizeof(EFI_GUID) == 16, "EFI_GUID size mismatch");
-_EFI_SA(sizeof(EFI_MAC_ADDRESS) == 32, "EFI_MAC_ADDRESS size mismatch");
-_EFI_SA(sizeof(EFI_TIME) == 16, "EFI_TIME size mismatch");
-_EFI_SA(sizeof(EFI_TABLE_HEADER) == 24, "EFI_TABLE_HEADER size mismatch");
-_EFI_SA(sizeof(EFI_CAPSULE_HEADER) == 28, "EFI_CAPSULE_HEADER size mismatch");
+  _EFI_SA(sizeof(BOOLEAN) == 1, "BOOLEAN must be 1 byte");
+  _EFI_SA(sizeof(CHAR16) == 2, "CHAR16 must be 2 bytes");
+  _EFI_SA(sizeof(EFI_GUID) == 16, "EFI_GUID size mismatch");
+  _EFI_SA(sizeof(EFI_MAC_ADDRESS) == 32, "EFI_MAC_ADDRESS size mismatch");
+  _EFI_SA(sizeof(EFI_TIME) == 16, "EFI_TIME size mismatch");
+  _EFI_SA(sizeof(EFI_TABLE_HEADER) == 24, "EFI_TABLE_HEADER size mismatch");
+  _EFI_SA(sizeof(EFI_CAPSULE_HEADER) == 28, "EFI_CAPSULE_HEADER size mismatch");
 
 #ifdef __cplusplus
 }

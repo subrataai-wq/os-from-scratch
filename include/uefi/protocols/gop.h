@@ -77,19 +77,11 @@ typedef enum
  * ABI assertions: UEFI enums are strictly 32-bit and structure layouts
  * must match the specification binary layout.
  */
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
-static_assert(sizeof(EFI_GRAPHICS_PIXEL_FORMAT) == 4, "EFI_GRAPHICS_PIXEL_FORMAT must be 32-bit");
-static_assert(sizeof(EFI_GRAPHICS_OUTPUT_BLT_OPERATION) == 4, "EFI_GRAPHICS_OUTPUT_BLT_OPERATION must be 32-bit");
-static_assert(sizeof(EFI_PIXEL_BITMASK) == 16, "EFI_PIXEL_BITMASK size mismatch");
-static_assert(sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION) == 36, "EFI_GRAPHICS_OUTPUT_MODE_INFORMATION size mismatch");
-static_assert(sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL) == 4, "EFI_GRAPHICS_OUTPUT_BLT_PIXEL size mismatch");
-#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
-_Static_assert(sizeof(EFI_GRAPHICS_PIXEL_FORMAT) == 4, "EFI_GRAPHICS_PIXEL_FORMAT must be 32-bit");
-_Static_assert(sizeof(EFI_GRAPHICS_OUTPUT_BLT_OPERATION) == 4, "EFI_GRAPHICS_OUTPUT_BLT_OPERATION must be 32-bit");
-_Static_assert(sizeof(EFI_PIXEL_BITMASK) == 16, "EFI_PIXEL_BITMASK size mismatch");
-_Static_assert(sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION) == 36, "EFI_GRAPHICS_OUTPUT_MODE_INFORMATION size mismatch");
-_Static_assert(sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL) == 4, "EFI_GRAPHICS_OUTPUT_BLT_PIXEL size mismatch");
-#endif
+_EFI_SA(sizeof(EFI_GRAPHICS_PIXEL_FORMAT) == 4, "EFI_GRAPHICS_PIXEL_FORMAT must be 32-bit");
+_EFI_SA(sizeof(EFI_GRAPHICS_OUTPUT_BLT_OPERATION) == 4, "EFI_GRAPHICS_OUTPUT_BLT_OPERATION must be 32-bit");
+_EFI_SA(sizeof(EFI_PIXEL_BITMASK) == 16, "EFI_PIXEL_BITMASK size mismatch");
+_EFI_SA(sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION) == 36, "EFI_GRAPHICS_OUTPUT_MODE_INFORMATION size mismatch");
+_EFI_SA(sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL) == 4, "EFI_GRAPHICS_OUTPUT_BLT_PIXEL size mismatch");
 
 typedef EFI_STATUS(EFIAPI *EFI_GRAPHICS_OUTPUT_PROTOCOL_QUERY_MODE)(
     IN EFI_GRAPHICS_OUTPUT_PROTOCOL *This,

@@ -39,24 +39,71 @@ The project consists of two primary binaries:
 
 ## Building and Running
 
-Configure and compile using CMake presets:
+### 1. Build via CMake Presets (Recommended)
 
 ```powershell
+# Configure Ninja build directory with Clang toolchain
 cmake --preset ninja-debug
+
+# Compile kernel.elf, bootx64.efi, and stage the ESP directory
 cmake --build --preset ninja-debug
+
+# Clean rebuild
+cmake --build --preset ninja-debug --clean-first
 ```
 
-Or using standard CMake:
+### 2. Manual CMake Invocation
 
 ```powershell
-cmake -B build/debug -G Ninja
+cmake -B build/debug -G Ninja -D CMAKE_C_COMPILER=clang
 cmake --build build/debug
 ```
 
-Launch under QEMU:
+### 3. Emulation (QEMU)
+
+Launch directly through the CMake target (auto-detects OVMF firmware):
 
 ```powershell
 cmake --build build/debug --target run
+```
+
+Or invoke QEMU manually:
+
+```powershell
+qemu-system-x86_64 `
+  -drive if=pflash,format=raw,readonly=on,file="C:/Program Files/qemu/share/edk2-x86_64-code.fd" `
+  -drive file=fat:rw:build/debug/esp,format=raw `
+  -net none `
+  -serial stdio
+```
+
+### 4. Binary Inspection & Debugging
+
+Verify ELF segment layout, physical base (`0x200000`), and entry point:
+
+```powershell
+# Inspect ELF headers and PT_LOAD segment alignment
+llvm-readelf -h -l build/debug/kernel.elf
+
+# Disassemble kernel entry point
+llvm-objdump -d --no-show-raw-insn build/debug/kernel.elf
+
+# Inspect UEFI PE32+ bootloader headers
+llvm-objdump -p build/debug/esp/EFI/BOOT/BOOTX64.EFI
+```
+
+Attach GDB to QEMU via port `1234`:
+
+```powershell
+# Terminal 1: Launch QEMU paused at reset vector
+qemu-system-x86_64 `
+  -drive if=pflash,format=raw,readonly=on,file="C:/Program Files/qemu/share/edk2-x86_64-code.fd" `
+  -drive file=fat:rw:build/debug/esp,format=raw `
+  -net none `
+  -s -S
+
+# Terminal 2: Connect GDB and load kernel symbols
+gdb -ex "target remote localhost:1234" -ex "symbol-file build/debug/kernel.elf"
 ```
 
 The build system automatically deploys `BOOTX64.EFI` to `build/debug/esp/EFI/BOOT/` and `kernel.elf` to `build/debug/esp/` for direct FAT volume emulation.

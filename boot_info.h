@@ -14,107 +14,105 @@
 #ifndef BOOT_INFO_H
 #define BOOT_INFO_H
 
-#if defined(__has_include)
-#  if __has_include("uefi/uefi.h")
-#    include "uefi/uefi.h"
-#  elif __has_include("include/uefi/uefi.h")
-#    include "include/uefi/uefi.h"
-#  endif
-#endif
-
-#ifndef _EFI_TYPES_H_
 #include <stdint.h>
-typedef uint8_t  UINT8;
-typedef uint16_t UINT16;
-typedef uint32_t UINT32;
-typedef uint64_t UINT64;
-typedef int8_t   INT8;
-typedef int16_t  INT16;
-typedef int32_t  INT32;
-typedef int64_t  INT64;
-typedef uint64_t UINTN;
-typedef void     VOID;
-typedef void*    EFI_HANDLE;
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
-/*
- * Complete forward declaration for EFI_LOADED_IMAGE_PROTOCOL from efi_types.h.
- * Conforms to UEFI 2.11 Section 9.1.
- */
-#ifdef _EFI_TYPES_H_
-struct _EFI_LOADED_IMAGE_PROTOCOL
-{
-  UINT32 Revision;
-  EFI_HANDLE ParentHandle;
-  struct _EFI_SYSTEM_TABLE *SystemTable;
+  /*
+   * Linear framebuffer configuration acquired from Graphics Output Protocol (GOP).
+   * pixels_per_scanline accounts for stride pitch padding required by display hardware.
+   */
+  typedef struct
+  {
+    uint64_t base_address;
+    uint32_t width;
+    uint32_t height;
+    uint32_t pixels_per_scanline;
+    uint32_t bytes_per_pixel;
+    uint32_t red_mask;
+    uint32_t green_mask;
+    uint32_t blue_mask;
+    uint32_t reserved_mask;
+  } FramebufferInfo;
 
-  EFI_HANDLE DeviceHandle;
-  EFI_DEVICE_PATH_PROTOCOL *FilePath;
-  VOID *Reserved;
+  /*
+   * Normalized physical memory descriptor.
+   * Extracted from UEFI memory map descriptors for early page frame allocation.
+   */
+  typedef struct
+  {
+    uint64_t address;
+    uint64_t size;
+    uint32_t type;
+    uint32_t reserved;
+  } MemoryMapEntry;
 
-  UINT32 LoadOptionsSize;
-  VOID *LoadOptions;
+  /*
+   * Normalized system memory map container.
+   * descriptor_size preserves the firmware's physical descriptor stride.
+   */
+  typedef struct
+  {
+    MemoryMapEntry *entries;
+    uint64_t entry_count;
+    uint64_t descriptor_size;
+    uint32_t descriptor_version;
+    uint32_t reserved;
+    uint64_t map_key;
+    uint64_t total_memory;
+    uint64_t free_memory;
+  } MemoryMapInfo;
 
-  VOID *ImageBase;
-  UINT64 ImageSize;
-  EFI_MEMORY_TYPE ImageCodeType;
-  EFI_MEMORY_TYPE ImageDataType;
-  EFI_IMAGE_UNLOAD Unload;
-};
+  /*
+   * Root handoff structure passed to kernel_main().
+   */
+  typedef struct
+  {
+    FramebufferInfo framebuffer;
+    MemoryMapInfo memory_map;
+    uint64_t rsdp;
+    uint64_t kernel_physical_base;
+    uint64_t kernel_virtual_base;
+    uint64_t kernel_size;
+  } BootInfo;
+
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
+#define KERNEL_ABI __attribute__((sysv_abi))
+#else
+#define KERNEL_ABI
 #endif
 
-/*
- * Linear framebuffer configuration acquired from Graphics Output Protocol (GOP).
- * pixels_per_scanline accounts for stride pitch padding required by display hardware.
- */
-typedef struct
-{
-  UINT64 base_address;
-  UINT32 width;
-  UINT32 height;
-  UINT32 pixels_per_scanline;
-  UINT32 bytes_per_pixel;
-  UINT32 red_mask;
-  UINT32 green_mask;
-  UINT32 blue_mask;
-  UINT32 reserved_mask;
-} FramebufferInfo;
+  typedef void(KERNEL_ABI *kernel_entry_t)(BootInfo *boot_info);
 
 /*
- * Normalized physical memory descriptor.
- * Extracted from UEFI memory map descriptors for early page frame allocation.
+ * Compile-time ABI assertions to guarantee identical structure layout
+ * across both the bootloader (MS x64 ABI) and the kernel (System V ABI).
  */
-typedef struct
-{
-  UINT64 address;
-  UINT64 size;
-  UINT32 type;
-  UINT32 reserved;
-} MemoryMapEntry;
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#define _BOOT_INFO_SA(c, m) static_assert(c, m)
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+#define _BOOT_INFO_SA(c, m) _Static_assert(c, m)
+#else
+#define _BOOT_INFO_SA(c, m) extern char _boot_info_sa_dummy[(c) ? 1 : -1]
+#endif
 
-typedef struct
-{
-  MemoryMapEntry *entries;
-  UINT64 entry_count;
-  UINT64 descriptor_size;
-  UINT32 descriptor_version;
-  UINT32 reserved;
-  UINT64 map_key;
-  UINT64 total_memory;
-  UINT64 free_memory;
-} MemoryMapInfo;
+  _BOOT_INFO_SA(sizeof(FramebufferInfo) == 40, "FramebufferInfo size mismatch");
+  _BOOT_INFO_SA(sizeof(MemoryMapEntry) == 24, "MemoryMapEntry size mismatch");
+  _BOOT_INFO_SA(sizeof(MemoryMapInfo) == 56, "MemoryMapInfo size mismatch");
+  _BOOT_INFO_SA(sizeof(BootInfo) == 128, "BootInfo size mismatch");
+  _BOOT_INFO_SA(offsetof(BootInfo, framebuffer) == 0, "BootInfo.framebuffer offset mismatch");
+  _BOOT_INFO_SA(offsetof(BootInfo, memory_map) == 40, "BootInfo.memory_map offset mismatch");
+  _BOOT_INFO_SA(offsetof(BootInfo, rsdp) == 96, "BootInfo.rsdp offset mismatch");
+  _BOOT_INFO_SA(offsetof(BootInfo, kernel_physical_base) == 104, "BootInfo.kernel_physical_base offset mismatch");
+  _BOOT_INFO_SA(offsetof(BootInfo, kernel_virtual_base) == 112, "BootInfo.kernel_virtual_base offset mismatch");
+  _BOOT_INFO_SA(offsetof(BootInfo, kernel_size) == 120, "BootInfo.kernel_size offset mismatch");
 
-/*
- * Root handoff structure passed to kernel_main().
- */
-typedef struct
-{
-  FramebufferInfo framebuffer;
-  MemoryMapInfo memory_map;
-  UINT64 rsdp;
-  UINT64 kernel_physical_base;
-  UINT64 kernel_virtual_base;
-  UINT64 kernel_size;
-} BootInfo;
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* BOOT_INFO_H */

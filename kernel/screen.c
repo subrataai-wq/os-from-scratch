@@ -59,7 +59,7 @@ void screen_putpixel(uint32_t x, uint32_t y, uint32_t rgb24)
 
 void screen_fill_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t rgb24)
 {
-  if (g_fb.base_address == 0)
+  if (g_fb.base_address == 0 || g_fb.pixels_per_scanline == 0)
     return;
 
   uint32_t native_val = rgb_to_native(rgb24);
@@ -131,6 +131,15 @@ static void scroll_if_needed(void)
 {
   if (g_cursor_y + FONT_HEIGHT + 16 > g_fb.height)
   {
+    /* Guard: Prevent uint32_t underflow on compact or non-standard resolutions */
+    if (g_fb.height <= (FONT_HEIGHT + 32) || g_fb.base_address == 0 || g_fb.pixels_per_scanline == 0)
+    {
+      screen_clear(g_bg_color);
+      g_cursor_x = 16;
+      g_cursor_y = 16;
+      return;
+    }
+
     volatile uint32_t *fb = (volatile uint32_t *)g_fb.base_address;
     uint32_t total_rows_to_copy = g_fb.height - (FONT_HEIGHT + 16);
 

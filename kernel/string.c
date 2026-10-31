@@ -6,6 +6,9 @@
 
 void *memcpy(void *dest, const void *src, size_t n)
 {
+  if (!dest || !src || dest == src || n == 0)
+    return dest;
+
   uint8_t *d = (uint8_t *)dest;
   const uint8_t *s = (const uint8_t *)src;
   for (size_t i = 0; i < n; i++)
@@ -17,6 +20,9 @@ void *memcpy(void *dest, const void *src, size_t n)
 
 void *memset(void *s, int c, size_t n)
 {
+  if (!s || n == 0)
+    return s;
+
   uint8_t *p = (uint8_t *)s;
   uint8_t val = (uint8_t)c;
   for (size_t i = 0; i < n; i++)
@@ -31,6 +37,9 @@ void *memset(void *s, int c, size_t n)
  */
 void *memmove(void *dest, const void *src, size_t n)
 {
+  if (!dest || !src || dest == src || n == 0)
+    return dest;
+
   uint8_t *d = (uint8_t *)dest;
   const uint8_t *s = (const uint8_t *)src;
   if (d < s)
@@ -52,6 +61,15 @@ void *memmove(void *dest, const void *src, size_t n)
 
 int memcmp(const void *s1, const void *s2, size_t n)
 {
+  if (!s1 && !s2)
+    return 0;
+  if (!s1)
+    return -1;
+  if (!s2)
+    return 1;
+  if (s1 == s2 || n == 0)
+    return 0;
+
   const uint8_t *p1 = (const uint8_t *)s1;
   const uint8_t *p2 = (const uint8_t *)s2;
   for (size_t i = 0; i < n; i++)
@@ -66,6 +84,9 @@ int memcmp(const void *s1, const void *s2, size_t n)
 
 size_t strlen(const char *s)
 {
+  if (!s)
+    return 0;
+
   size_t len = 0;
   while (s[len])
   {

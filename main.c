@@ -11,6 +11,7 @@
  */
 
 #include "uefi/uefi.h"
+#include "elf64.h"
 #include "boot_info.h"
 
 static const EFI_GUID g_acpi20_guid = EFI_ACPI_20_TABLE_GUID;
@@ -22,41 +23,6 @@ static const EFI_GUID g_graphics_output_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID
 static EFI_SYSTEM_TABLE *g_st = NULL;
 static EFI_BOOT_SERVICES *g_bs = NULL;
 static BootInfo g_boot_info;
-
-#define ELF_MAGIC 0x464C457FU /* 0x7F, 'E', 'L', 'F' */
-#define PT_LOAD   1U
-
-typedef struct
-{
-  UINT8  e_ident[16];
-  UINT16 e_type;
-  UINT16 e_machine;
-  UINT32 e_version;
-  UINT64 e_entry;
-  UINT64 e_phoff;
-  UINT64 e_shoff;
-  UINT32 e_flags;
-  UINT16 e_ehsize;
-  UINT16 e_phentsize;
-  UINT16 e_phnum;
-  UINT16 e_shentsize;
-  UINT16 e_shnum;
-  UINT16 e_shstrndx;
-} Elf64_Ehdr;
-
-typedef struct
-{
-  UINT32 p_type;
-  UINT32 p_flags;
-  UINT64 p_offset;
-  UINT64 p_vaddr;
-  UINT64 p_paddr;
-  UINT64 p_filesz;
-  UINT64 p_memsz;
-  UINT64 p_align;
-} Elf64_Phdr;
-
-typedef void (*kernel_entry_t)(BootInfo *boot_info);
 
 /*
  * Low-level UEFI console output helpers.
@@ -476,6 +442,15 @@ static EFI_STATUS load_kernel(EFI_HANDLE image_handle, BootInfo *boot_info, cons
     return EFI_LOAD_ERROR;
   }
 
+  /* Guard: Validate program header table bounds against file buffer */
+  if (ehdr->e_phoff + ((UINT64)ehdr->e_phnum * sizeof(Elf64_Phdr)) > file_size)
+  {
+    print_status_tag(u"FAIL", EFI_LIGHTRED);
+    print(u"Corrupted ELF program header table out of file bounds\r\n");
+    g_bs->FreePool(elf_buffer);
+    return EFI_LOAD_ERROR;
+  }
+
   Elf64_Phdr *phdrs = (Elf64_Phdr *)(elf_buffer + ehdr->e_phoff);
   UINT64 lowest_addr = 0xFFFFFFFFFFFFFFFFULL;
   UINT64 highest_addr = 0;
@@ -485,25 +460,32 @@ static EFI_STATUS load_kernel(EFI_HANDLE image_handle, BootInfo *boot_info, cons
     Elf64_Phdr *p = &phdrs[i];
     if (p->p_type == PT_LOAD)
     {
+      /* Guard: Ignore empty segments */
+      if (p->p_memsz == 0)
+        continue;
+
+      /* Guard: Segment file payload must not exceed file buffer or memsz */
+      if (p->p_offset + p->p_filesz > file_size || p->p_filesz > p->p_memsz)
+      {
+        print_status_tag(u"FAIL", EFI_LIGHTRED);
+        print(u"Invalid PT_LOAD segment bounds\r\n");
+        g_bs->FreePool(elf_buffer);
+        return EFI_LOAD_ERROR;
+      }
+
       UINTN pages = EFI_SIZE_TO_PAGES(p->p_memsz);
       EFI_PHYSICAL_ADDRESS dest_addr = p->p_paddr;
 
+      /* Deterministic physical allocation at linked address */
       status = g_bs->AllocatePages(AllocateAddress, EfiLoaderData, pages, &dest_addr);
       if (EFI_ERROR(status))
       {
-        print_status_tag(u"WARN", EFI_YELLOW);
-        print(u"AllocateAddress failed at ");
+        print_status_tag(u"FAIL", EFI_LIGHTRED);
+        print(u"AllocateAddress failed at linked physical base ");
         print_hex(p->p_paddr);
-        print(u", falling back to AnyPages\r\n");
-
-        status = g_bs->AllocatePages(AllocateAnyPages, EfiLoaderData, pages, &dest_addr);
-        if (EFI_ERROR(status))
-        {
-          print_status_tag(u"FAIL", EFI_LIGHTRED);
-          print(u"AllocatePages failed completely\r\n");
-          g_bs->FreePool(elf_buffer);
-          return status;
-        }
+        print(u"\r\n");
+        g_bs->FreePool(elf_buffer);
+        return status;
       }
 
       /* Zero full memsz range to clean BSS, then copy file payload */
@@ -594,11 +576,15 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_tab
     print_hex(kernel_entry);
     print(u" (Ready to Launch)\r\n");
 
+#ifndef OS_AUTOBOOT
     print(u"\r\n  Press any key to ExitBootServices and launch MyOS Kernel...\r\n");
     UINTN event_index = 0;
     EFI_INPUT_KEY key;
     g_bs->WaitForEvent(1, &g_st->ConIn->WaitForKey, &event_index);
     g_st->ConIn->ReadKeyStroke(g_st->ConIn, &key);
+#else
+    print(u"\r\n  [AUTOBOOT] Automated test run active. Proceeding to ExitBootServices...\r\n");
+#endif
 
     /*
      * Terminate boot services. Pre-allocate buffer so no memory allocation
@@ -610,38 +596,50 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_tab
     UINT32 desc_ver = 0;
     EFI_MEMORY_DESCRIPTOR *final_map = NULL;
 
+    EFI_STATUS exit_status = EFI_LOAD_ERROR;
     EFI_STATUS alloc_status = g_bs->AllocatePool(EfiLoaderData, map_size, (VOID **)&final_map);
     if (!EFI_ERROR(alloc_status))
     {
       EFI_STATUS map_status = g_bs->GetMemoryMap(&map_size, final_map, &map_key, &desc_size, &desc_ver);
       if (!EFI_ERROR(map_status))
       {
-        EFI_STATUS exit_status = g_bs->ExitBootServices(image_handle, map_key);
+        exit_status = g_bs->ExitBootServices(image_handle, map_key);
         if (EFI_ERROR(exit_status))
         {
           /* Re-fetch map_key and retry if interrupted by firmware timer tick */
           map_status = g_bs->GetMemoryMap(&map_size, final_map, &map_key, &desc_size, &desc_ver);
           if (!EFI_ERROR(map_status))
           {
-            g_bs->ExitBootServices(image_handle, map_key);
+            exit_status = g_bs->ExitBootServices(image_handle, map_key);
           }
         }
       }
     }
 
+    /* Guard: CPU must not branch to bare-metal code if ExitBootServices failed */
+    if (EFI_ERROR(exit_status))
+    {
+      set_color(EFI_LIGHTRED, EFI_BACKGROUND_BLACK);
+      print(u"\r\n  Fatal Error: ExitBootServices failed completely. Halting system.\r\n");
+      while (1)
+      {
+        __asm__ volatile("hlt");
+      }
+    }
+
     /*
      * Transfer control to kernel_main.
-     * Pass &g_boot_info in RDI (System V AMD64 ABI) and RCX (Microsoft x64 ABI)
-     * to guarantee parameter receipt across compiler configurations.
+     * Mask interrupts (cli) and pass &g_boot_info in RDI (System V AMD64 ABI)
+     * and RCX (Microsoft x64 ABI) to guarantee parameter receipt across compilers.
      */
-    __asm__ volatile (
+    __asm__ volatile(
+        "cli\n\t"
         "movq %0, %%rdi\n\t"
         "movq %0, %%rcx\n\t"
         "call *%1\n\t"
         :
         : "r"(&g_boot_info), "r"(kernel_entry)
-        : "rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "memory"
-    );
+        : "rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "memory");
 
     /* Halt loop in case kernel returns */
     while (1)

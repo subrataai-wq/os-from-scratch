@@ -25,9 +25,10 @@ jobs:
           clang -std=c17 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/uefi/uefi.h
           clang -std=c17 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/elf64.h
 
-          # Add freestanding and compiler-builtin headers for bare-metal targets
-          clang --target=x86_64-unknown-windows -ffreestanding -nostdinc -isystem /usr/lib/llvm-21/lib/clang/21/include -std=c17 -pedantic-errors -Wall -Wextra -Werror -fsyntax-only boot_info.h
-          clang --target=x86_64-unknown-none-elf -ffreestanding -nostdinc -isystem /usr/lib/llvm-21/lib/clang/21/include -std=c17 -pedantic-errors -Wall -Wextra -Werror -fsyntax-only boot_info.h
+          # Add freestanding and compiler-builtin headers dynamically for bare-metal targets
+          CLANG_INC="$(clang -print-resource-dir)/include"
+          clang --target=x86_64-unknown-windows -ffreestanding -nostdinc -isystem "$CLANG_INC" -std=c17 -pedantic-errors -Wall -Wextra -Werror -fsyntax-only boot_info.h
+          clang --target=x86_64-unknown-none-elf -ffreestanding -nostdinc -isystem "$CLANG_INC" -std=c17 -pedantic-errors -Wall -Wextra -Werror -fsyntax-only boot_info.h
 
           # Optional backward header compatibility checks (C11, C99)
           clang -std=c11 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/uefi/uefi.h

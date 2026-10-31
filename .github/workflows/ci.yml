@@ -31,7 +31,7 @@ jobs:
 
           # Optional backward header compatibility checks (C11, C99)
           clang -std=c11 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/uefi/uefi.h
-          clang -std=c99 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/elf64.h
+          clang -std=99 -pedantic-errors -Wall -Wextra -Werror -I include -fsyntax-only include/elf64.h
 
       - name: Configure CMake (Debug + AutoBoot)
         run: |
@@ -47,7 +47,7 @@ jobs:
         run: |
           test -f build/debug/esp/EFI/BOOT/BOOTX64.EFI
           test -f build/debug/esp/kernel.elf
-          llvm-readelf -h -l build/debug/kernel.elf
+          readelf -h -l build/debug/kernel.elf
 
       - name: Run Headless QEMU Smoke Test
         run: |

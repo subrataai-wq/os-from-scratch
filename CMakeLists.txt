@@ -8,12 +8,16 @@ if(NOT DEFINED CMAKE_C_COMPILER)
     endif()
 endif()
 
-# Suppress host runtime assumptions and libc detection for bare-metal targets
+
+# Target bare-metal system architecture (x86_64)
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR x86_64)
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 project(myos LANGUAGES C)
+
 
 if(CMAKE_C_COMPILER_ID AND NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
     message(FATAL_ERROR
@@ -47,10 +51,14 @@ target_compile_options(kernel_objs PRIVATE
     --target=x86_64-unknown-none-elf
     -nostdlib
     -ffreestanding
+    -fno-builtin
+    -fno-strict-aliasing
     -mno-red-zone
+    -mgeneral-regs-only
     -fno-stack-protector
     -Wall
     -Wextra
+    -Werror
 )
 
 set(KERNEL_ELF "${CMAKE_BINARY_DIR}/kernel.elf")
@@ -75,11 +83,19 @@ add_custom_command(TARGET kernel POST_BUILD
     COMMENT "Deploying kernel.elf to EFI System Partition (esp/kernel.elf)..."
 )
 
+# Register ESP staging directory for cleanup during 'clean' target
+set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${ESP_DIR}")
+
 # ------------------------------------------------------------------------------
 # UEFI Bootloader Target (PE32+ EFI Application)
 # ------------------------------------------------------------------------------
 
 add_executable(bootx64 main.c)
+
+option(OS_AUTOBOOT "Bypass interactive keypress prompt before ExitBootServices" OFF)
+if(OS_AUTOBOOT)
+    target_compile_definitions(bootx64 PRIVATE OS_AUTOBOOT=1)
+endif()
 
 set_target_properties(bootx64 PROPERTIES
     OUTPUT_NAME "BOOTX64"
@@ -97,9 +113,11 @@ target_compile_options(bootx64 PRIVATE
     -ffreestanding
     -fshort-wchar
     -mno-red-zone
+    -mms-bitfields
     -fno-stack-protector
     -Wall
     -Wextra
+    -Werror
 )
 
 target_link_options(bootx64 PRIVATE
@@ -132,6 +150,8 @@ find_file(OVMF_BIOS
         "/usr/share/OVMF"
         "/usr/share/ovmf"
         "/usr/share/edk2-ovmf/x64"
+        "/opt/homebrew/share/qemu"
+        "/usr/local/share/qemu"
 )
 
 if(QEMU_EXECUTABLE AND OVMF_BIOS)
@@ -139,6 +159,7 @@ if(QEMU_EXECUTABLE AND OVMF_BIOS)
         COMMAND "${QEMU_EXECUTABLE}"
             -drive if=pflash,format=raw,readonly=on,file=${OVMF_BIOS}
             -drive file=fat:rw:${ESP_DIR},format=raw
+            -m 512M
             -net none
             -serial stdio
         DEPENDS bootx64
